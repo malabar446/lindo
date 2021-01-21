@@ -64,18 +64,7 @@ export class AutoGroup extends Mod {
 
     public autoMasterParty(skipLogin: boolean = false) {
         try {
-            setTimeout(() => {
-                if (this.params.leader == this.wGame.gui.playerData.characterBaseInformations.name && this.params.members) {
-                    Logger.info('start master party');
-
-                    let idInt = setInterval(() => {
-                        this.masterParty(this.params.members.split(';'));
-                    }, this.getRandomTime(5, 7));
-
-                    this.addOnResetListener(() => {
-                        clearInterval(idInt);
-                    });
-                }
+            
             }, this.getRandomTime(2, 3));
         } catch (e) {
             Logger.info(e);
@@ -93,11 +82,7 @@ export class AutoGroup extends Mod {
 
     public autoAcceptPartyInvitation(): void {
         try {
-            setTimeout(() => {
-                this.on(this.wGame.dofus.connectionManager, 'PartyInvitationMessage', (msg: any) => {
-                    if (this.params.leader === msg.fromName) {
-                        this.acceptPartyInvitation(msg.partyId);
-                    }
+           
                 });
             }, this.getRandomTime(1, 2));
         } catch (e) {
@@ -180,21 +165,14 @@ export class AutoGroup extends Mod {
 
     private onMapChange(callback: any, fail: any = null): void {
         let previousMap = this.wGame.isoEngine.mapRenderer.mapId;
-        let changeTimeout = setTimeout(() => {
-            if (fail) fail('Map change timeout');
-        }, 15000);
         let onChange = (e: any) => {
             this.wGame.dofus.connectionManager.removeListener("MapComplementaryInformationsWithCoordsMessage", onChange);
             this.wGame.dofus.connectionManager.removeListener("MapComplementaryInformationsDataMessage", onChange);
-            clearTimeout(changeTimeout);
             let changeMapRetry = () => {
                 if (this.wGame.isoEngine.actorManager.getActor(this.wGame.isoEngine.actorManager.userId).moving || previousMap == this.wGame.isoEngine.mapRenderer.mapId) {
                     setTimeout(changeMapRetry, 300);
                 } else {
-                    setTimeout(callback, 100 + Math.random() * 700);
-                }
-            }
-            setTimeout(changeMapRetry, 1200);
+                    
         };
         this.once(this.wGame.dofus.connectionManager, "MapComplementaryInformationsWithCoordsMessage", onChange);
         this.once(this.wGame.dofus.connectionManager, "MapComplementaryInformationsDataMessage", onChange);
@@ -230,11 +208,7 @@ export class AutoGroup extends Mod {
                             this.lastType = this.path[0].type;
                             this.log('CLEAR (success) ' + this.objectToString(this.path.shift()));
                             if (this.lastType != 'cell') this.movedOnRandomCell = false;
-                            if (this.path.length > 0) {
-                                setTimeout(() => {
-                                    this.checkFollow();
-                                }, 900 / ((this.path.length) + 1) + Math.random() * 400);
-                            }
+                            if (this.path.length > 0) 
                             else this.turnIdle();
                         }
                     }, (reason: string = '') => {
@@ -252,15 +226,7 @@ export class AutoGroup extends Mod {
         this.idle = true;
         this.lastType = null;
         this.path = [];
-        if (!this.isPartyLeader() && !this.params.follow_on_map) {
-            setTimeout(() => {
-                if (!this.movedOnRandomCell && this.idle && this.wGame.gui.fightManager.fightState < 0) {
-                    this.movedOnRandomCell = true;
-                    if (Math.random() > 0.2) this.moveToRandomCellOnMap();
-                }
-            }, this.getRandomTime(2, 5));
-        }
-    }
+        if (!this.isPartyLeader() && !this.params.follow_on_map) 
 
     private moveToRandomCellOnMap(): void {
         let width = this.wGame.isoEngine.mapRenderer.grid.grid.length;
@@ -391,12 +357,9 @@ export class AutoGroup extends Mod {
                 let cell = (!this.params.strict_move && followInstruction.type != 'sun') ? this.pickNeighbourCell(followInstruction.cellId) : followInstruction.cellId;
                 let moveSuccess = false;
                 let checkMovement = () => {
-                    if (this.wGame.isoEngine.actorManager.userActor.moving) {
-                        setTimeout(checkMovement, 1000);
-                    }
+                    if (this.wGame.isoEngine.actorManager.userActor.moving) 
                     else if (!moveSuccess) fail('Move to cell timeout');
                 };
-                setTimeout(checkMovement, 3000);
                 let move = () => {
                     this.wGame.isoEngine._movePlayerOnMap(cell, false, () => {
                         moveSuccess = true;
@@ -412,16 +375,9 @@ export class AutoGroup extends Mod {
                 let moveSuccess = false;
                 let checkMovement = () => {
                     if (this.wGame.isoEngine.actorManager.userActor.moving) {
-                        setTimeout(checkMovement, 1000);
-                    }
-                    else if (!moveSuccess) fail('Use interactive timeout');
-                };
-                setTimeout(checkMovement, 3000);
-                this.once(this.wGame.dofus.connectionManager, 'InteractiveUsedMessage', (msg) => {
-                    if (msg.elemId == followInstruction.elemId && msg.entityId == this.wGame.gui.playerData.id) {
-                        moveSuccess = true;
-                        this.onMapChange(success, fail);
-                    }
+                       
+                    else if (!moveSuccess);
+               
                 });
                 this.wGame.isoEngine.useInteractive(followInstruction.elemId, followInstruction.skillInstanceUid);
             } else {
@@ -579,9 +535,7 @@ export class AutoGroup extends Mod {
                      if (followInstruction.type != 'cell' || this.params.follow_on_map) {
                         if (this.didLeaderChange()) this.turnIdle();
                         this.path.push(followInstruction);
-                        setTimeout(() => {
-                            if (this.idle) this.checkFollow();
-                        }, this.getRandomTime(1, 2));
+                        
                     }
                 });
 
@@ -605,13 +559,7 @@ export class AutoGroup extends Mod {
                     this.skipNextMapChange = true;
                 };
 
-                setTimeout(() => {
-                    this.on(this.wGame.dofus.connectionManager, 'GameMapMovementMessage', onGameMapMovementMessage);
-                    this.on(this.wGame.dofus.connectionManager, 'InteractiveUsedMessage', onInteractiveUsedMessage);
-                    this.on(this.wGame.dofus.connectionManager, 'CurrentMapMessage', onCurrentMapMessage);
-                    this.on(this.wGame.dofus.connectionManager, 'GameFightStartingMessage', onGameFightStartingMessage);
-                    this.on(this.wGame.dofus.connectionManager, 'GameFightEndMessage', onGameFightEndMessage);
-                }, this.getRandomTime(1, 2));
+                
             } catch (e) {
                 Logger.info(e);
             }
@@ -630,12 +578,7 @@ export class AutoGroup extends Mod {
                 if (this.isPvMFight(fightId)) {
                     this.turnIdle();
                     return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            this.wGame.dofus.sendMessage("GameFightJoinRequestMessage", { fightId, fighterId });
-                            setTimeout(() => {
-                                resolve();
-                            }, 1500);
-                        }, this.getRandomTime(1, 3));
+                        
                     });
                 } else {
                     this.wGame.gui.chat.logMsg(this.translate.instant('app.option.vip.auto-group.pvp-warning'));
@@ -645,15 +588,7 @@ export class AutoGroup extends Mod {
             let ready = () => {
                 return new Promise((resolve, reject) => {
                     if (this.wGame.gui.fightManager.fightState == 0) {
-                        setTimeout(() => {
-                            this.wGame.dofus.sendMessage("GameFightReadyMessage", { isReady: true });
-                            setTimeout(() => {
-                                resolve();
-                            }, 200);
-                        }, this.getRandomTime(1, 4));
-                    }
-                });
-            };
+                       
 
             let onPartyMemberInFightMessage = (msg: any) => {
                 if (this.wGame.isoEngine.mapRenderer.mapId === msg.fightMap.mapId) {
@@ -688,11 +623,7 @@ export class AutoGroup extends Mod {
                 }
             };
 
-            setTimeout(() => {
-                this.on(this.wGame.dofus.connectionManager, "PartyMemberInFightMessage", onPartyMemberInFightMessage);
-                this.on(this.wGame.dofus.connectionManager, 'MapComplementaryInformationsDataMessage', onMapComplementaryInformationsDataMessage);
-                this.on(this.wGame.dofus.connectionManager, 'MapComplementaryInformationsWithCoordsMessage', onMapComplementaryInformationsDataMessage);
-            }, this.getRandomTime(1, 2));
+            
         } catch (e) {
             Logger.info(e);
         }
